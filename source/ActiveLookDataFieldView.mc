@@ -7,6 +7,7 @@ using Toybox.WatchUi;
 using Toybox.AntPlus;
 
 using ActiveLookSDK;
+using Radar;
 using ActiveLook.AugmentedActivityInfo;
 using ActiveLook.PageSettings;
 using ActiveLook.Layouts;
@@ -41,6 +42,10 @@ var tempo_lap_freeze as Lang.Number = -1;
 var tempo_congrats as Lang.Number = 1;
 var currentLayouts as Lang.Array<Layouts.GeneratorArguments> = [] as Lang.Array<Layouts.GeneratorArguments>;
 var runningDynamics as Toybox.AntPlus.RunningDynamics or Null = null;
+var mockRadar = false;
+var bikeRadarListener as Radar._MyRadarListenerCommon = mockRadar? new Radar.MockRadarListener() : new Radar.RadarListener();
+var bikeRadar = new Radar.MyBikeRadar(bikeRadarListener);
+var radarView as Radar.RadarView = new Radar.RadarView(bikeRadar, 30, 25, 45,175,false, mockRadar);
 
 // ToDo : différence pause stop
 // 1) Event onTimerStop  devrait être considéré comme un onTimerPause
@@ -183,11 +188,13 @@ function updateFields() as Void {
     }
     $.sdk.flushCmdStackingIfSup(200);
     $.sdk.holdGraphicEngine();
+    radarView.clearRadarArea();
     for (var i = 0; i < after; i++) {
         var asStr = Layouts.get($.currentLayouts[i]);
         log("updateFields", [i, asStr, $.currentLayouts]);
         $.sdk.updateLayoutValue($.currentLayouts[i][:id], asStr);
     }
+    radarView.updateRadarInfos();
     $.sdk.flushGraphicEngine();
 }
 

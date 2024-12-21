@@ -124,6 +124,8 @@ module ActiveLookSDK {
             //if ($ has :log) { $.log(Toybox.Lang.format("[ActiveLookSDK::ALSDK] $1$", [msg]), data); }
         }
 
+        var currentColor = 0;
+
         function initialize(obj) {
             listener = obj != null ? obj : self;
             ble = ActiveLookBLE.ActiveLook.setUp(self);
@@ -247,6 +249,10 @@ module ActiveLookSDK {
 			return buffer;
 		}
 
+        function sendCommandBuffer(id, data) {
+            self.sendRawCmd(self.commandBuffer(id, data));
+        }
+
         //////////////
         // Commands //
         //////////////
@@ -324,6 +330,48 @@ module ActiveLookSDK {
 			data.addAll(self.stringToPadByteArray(text, null, null));
             self.sendRawCmd(self.commandBuffer(0x37, data));
 		}
+
+        function _buildRectangle(x0 as Lang.Number,y0 as Lang.Number,x1 as Lang.Number,y1 as Lang.Number ) {
+            var data = []b;
+            data.addAll(self.numberToFixedSizeByteArray(x0, 2));
+            data.addAll(self.numberToFixedSizeByteArray(y0, 2));
+            data.addAll(self.numberToFixedSizeByteArray(x1, 2));
+            data.addAll(self.numberToFixedSizeByteArray(y1, 2));
+            return  data;
+        }
+
+        function emptyRectangle(x0 as Lang.Number,y0 as Lang.Number,witdth as Lang.Number,height as Lang.Number ) {
+            self.sendRawCmd(self.commandBuffer(0x33, _buildRectangle(x0,y0, x0 + witdth,y0 +height)));
+		}
+
+        function fullRectangle(x0 as Lang.Number,y0 as Lang.Number,witdth as Lang.Number,height as Lang.Number ) {
+            self.sendRawCmd(self.commandBuffer(0x34, _buildRectangle(x0,y0, x0 + witdth,y0 +height)));
+		}
+
+        function emptyCircle(x as Lang.Number,y as Lang.Number,radius as Lang.Number ) {
+             var data = []b;
+            data.addAll(self.numberToFixedSizeByteArray(x, 2));
+            data.addAll(self.numberToFixedSizeByteArray(y, 2));
+            data.addAll(self.numberToFixedSizeByteArray(radius,1 ));
+            self.sendRawCmd(self.commandBuffer(0x35,data));
+		}
+        function fullCircle(x as Lang.Number,y as Lang.Number,radius as Lang.Number ) {
+            var data = []b;
+            data.addAll(self.numberToFixedSizeByteArray(x, 2));
+            data.addAll(self.numberToFixedSizeByteArray(y, 2));
+            data.addAll(self.numberToFixedSizeByteArray(radius,1 ));
+            self.sendRawCmd(self.commandBuffer(0x36,data));
+		}
+
+        function changeColor(colorValue as Lang.Number){
+            if(self.currentColor != colorValue){
+                self.currentColor=colorValue;
+                $.sdk.sendCommandBuffer(0x30, [colorValue]);
+            }
+            return;
+        }
+
+
 
         function holdGraphicEngine(){
             _log("holdGraphicEngine", []);
