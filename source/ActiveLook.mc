@@ -71,7 +71,7 @@ module ActiveLookBLE {
         //! Comment and uncomment as needed.
         (:release) private static function _log(msg as Toybox.Lang.String, data as Toybox.Lang.Object or Null) as Void {}
         (:debug)   private static function _log(msg as Toybox.Lang.String, data as Toybox.Lang.Object or Null) as Void {
-            //if ($ has :log) { $.log(Toybox.Lang.format("[ActiveLookBLE::ActiveLook] $1$", [msg]), data); }
+            if ($ has :log) { $.log(Toybox.Lang.format("[ActiveLookBLE::ActiveLook] $1$", [msg]), data); }
         }
 
         //! Interface for delegate

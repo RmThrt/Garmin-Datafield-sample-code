@@ -31,6 +31,7 @@ using ActiveLook.Laps;
     Toybox.System.println(Toybox.Lang.format("[D]$1$ $2$", [msg, data]));
 }
 
+var radarOnly as Lang.Boolean = false;
 var sdk as ActiveLookSDK.ALSDK = null as ActiveLookSDK.ALSDK;
 var pagesSpec as Lang.Array<PageSettings.PageSpec> = [] as Lang.Array<PageSettings.PageSpec>;
 var pageIdx as Lang.Number = 0;
@@ -42,7 +43,9 @@ var tempo_lap_freeze as Lang.Number = -1;
 var tempo_congrats as Lang.Number = 1;
 var currentLayouts as Lang.Array<Layouts.GeneratorArguments> = [] as Lang.Array<Layouts.GeneratorArguments>;
 var runningDynamics as Toybox.AntPlus.RunningDynamics or Null = null;
-var mockRadar = false;
+
+(:debug)var mockRadar = true;
+(:release)var mockRadar = false;
 var bikeRadarListener as Radar._MyRadarListenerCommon = mockRadar? new Radar.MockRadarListener() : new Radar.RadarListener();
 var bikeRadar = new Radar.MyBikeRadar(bikeRadarListener);
 var radarView as Radar.RadarView = new Radar.RadarView(bikeRadar, 30, 25, 45,175,false, mockRadar);
@@ -194,7 +197,8 @@ function updateFields() as Void {
         log("updateFields", [i, asStr, $.currentLayouts]);
         $.sdk.updateLayoutValue($.currentLayouts[i][:id], asStr);
     }
-    radarView.updateRadarInfos();
+
+    radarView.updateRadarInfos((after==1 && $.currentLayouts[0][:sym] == :radar) ? 250:30);
     $.sdk.flushGraphicEngine();
 }
 

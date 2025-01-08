@@ -124,7 +124,7 @@ module ActiveLookSDK {
             //if ($ has :log) { $.log(Toybox.Lang.format("[ActiveLookSDK::ALSDK] $1$", [msg]), data); }
         }
 
-        var currentColor = 0;
+        var currentColor = null;
 
         function initialize(obj) {
             listener = obj != null ? obj : self;

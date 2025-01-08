@@ -20,6 +20,9 @@
     <setting propertyKey="@Properties.is_auto_loop" title="@Strings.settings_is_auto_loop">
         <settingConfig type="boolean" />
     </setting>
+    <setting propertyKey="@Properties.radar_only" title="@Strings.settings_radar_only">
+        <settingConfig type="boolean" />
+    </setting>
     <setting propertyKey="@Properties.loop_timer" title="@Strings.settings_loop_timer">
         <settingConfig type="numeric" min="1" max="30"/>
     </setting>

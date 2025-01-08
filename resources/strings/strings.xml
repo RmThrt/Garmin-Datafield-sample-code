@@ -12,6 +12,7 @@
     <string id="settings_is_gesture_enable">Enable the gesture sensor</string>
     
     <string id="settings_is_auto_loop">Auto-cycle data screens</string>
+    <string id="settings_radar_only">only show radar</string>
     <string id="settings_loop_timer">Adjust screen change interval (sec)</string>
 
     <string id="settings_is_als_enable">Display auto brightness</string>

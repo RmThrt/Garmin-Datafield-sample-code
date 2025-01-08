@@ -259,6 +259,7 @@ module ActiveLook {
             [   :averagePace, :averageHeartRate,  :averageCadence ],
             [ :threeSecPower,  :normalizedPower,  :currentCadence, :currentHeartRate,   :chrono, :currentSpeed ],
             [        :chrono,  :elapsedDistance,     :currentPace,      :totalAscent, :altitude ],
+            [:radar],
         ];
 
         const LAYOUTS as Lang.Array<Lang.Symbol> = [
@@ -300,7 +301,11 @@ module ActiveLook {
                     if (spec.find("(0)") == 0) {
                         pages.add(PAGES[0]);
                         spec = spec.substring(3, spec.length());
-                    } else if (spec.find("(") == 0) {
+                    } else if (spec.find("(100)") == 0) {
+                        pages.add(PAGES[12]);
+                        spec = spec.substring(5, spec.length());
+                    } 
+                    else if (spec.find("(") == 0) {
                         var closing = spec.find(")")
                             as Lang.Number or Null;
                         var pSpec = spec.substring(1, closing) as Lang.String ;
@@ -413,6 +418,7 @@ module ActiveLook {
             :lapAverageCadence           => 0x17173333,
             :lapCalories                 => 0x11113636,
             :lapAverageGroundContactTime => 0xBDBDBEBE,
+            :radar => 0x0B0B2B2B,
         };
 
         /*
@@ -518,6 +524,7 @@ module ActiveLook {
             :lapAveragePower 		=> { :full => :averagePowerFullFormat,  :half => :averagePowerHalfFormat  },
             :normalizedPower 		=> { :full => :averagePowerFullFormat,  :half => :averagePowerHalfFormat  },
             :threeSecPower 		    => { :full => :averagePowerFullFormat,  :half => :averagePowerHalfFormat  },
+            :radar 		    => { :full => :radarFullFormat,  :half => :radarHalfFormat },
         };
 
         function toFullChronoStr(value as Lang.Array<Lang.Number> or Null) as Lang.String {
@@ -587,6 +594,14 @@ module ActiveLook {
                 return toHalfStr("-");
             }
             return toHalfStr(Math.round(value).format("%.0f"));
+        }
+        
+        function radarFullFormat(value as Lang.Number or Lang.Float or Null) as Lang.String {
+            return "";
+        }
+        
+        function radarHalfFormat(value as Lang.Number or Lang.Float or Null) as Lang.String {
+            return "";
         }
 
         function toSizedStringDeprecated(value as Lang.Number or Lang.Float or Null, size as Lang.Number) as Lang.String {

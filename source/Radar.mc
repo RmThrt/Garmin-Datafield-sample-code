@@ -38,18 +38,6 @@ module Radar {
     function initialize() {
       _MyRadarListenerCommon.initialize();
 
-      self.radarInfos = [
-        new MyRadarTarget(139.0, 90.0,
-                          AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
-                          AntPlus.THREAT_SIDE_LEFT),
-        new MyRadarTarget(58.0, 30.0, AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
-                          AntPlus.THREAT_SIDE_RIGHT),
-        new MyRadarTarget(30.0, 50.0, AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
-                          AntPlus.THREAT_SIDE_NO_SIDE),
-        new MyRadarTarget(72.0, 120.0,
-                          AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
-                          AntPlus.THREAT_SIDE_NO_SIDE)
-      ];
     }
 
     function onBikeRadarUpdate(data) {
@@ -60,6 +48,9 @@ module Radar {
         self.radarInfos[i].range = self.radarInfos[i].range - 15;
         if (self.radarInfos[i].range < 0) {
           self.radarInfos[i].range = self.radarInfos[i].range;
+          self.radarInfos.remove(radarInfos[i]);
+          i--;
+          continue;
         }
         if (self.radarInfos[i].range > self.maxRadarRange) {
           self.maxRadarRange = self.radarInfos[i].range;
@@ -70,18 +61,19 @@ module Radar {
         if (emulatorIterationCount < emulatorIterationBeforeSetBackvalue) {
           emulatorIterationCount++;
         } else {
+          emulatorIterationCount= 0;
           self.radarInfos = [
-            new MyRadarTarget(139.0, 90.0,
+            new MyRadarTarget(30.0, 90.0,
                               AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
                               AntPlus.THREAT_SIDE_LEFT),
             new MyRadarTarget(58.0, 30.0,
-                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
+                              AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
                               AntPlus.THREAT_SIDE_RIGHT),
-            new MyRadarTarget(30.0, 50.0,
+            new MyRadarTarget(90.0, 50.0,
                               AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
                               AntPlus.THREAT_SIDE_NO_SIDE),
-            new MyRadarTarget(72.0, 120.0,
-                              AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
+            new MyRadarTarget(139.0, 120.0,
+                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
                               AntPlus.THREAT_SIDE_NO_SIDE)
           ];
         }
@@ -159,14 +151,7 @@ module Radar {
       self.mockRadar = mockRadar;
     }
 
-    function _showSlowVehicule(x as Lang.Number, y as Lang.Number,
-                               radius as Lang.Number) {
-      $.sdk.changeColor(self.atLeastOneFastVehicule ? 0 : 8);
-      $.sdk.fullCircle(x, y, radius);
 
-      $.sdk.changeColor(self.atLeastOneFastVehicule ? 8 : 0);
-      $.sdk.fullCircle(x, y, (radius * 0.6).toNumber());
-    }
 
     function _showVehicule(x as Lang.Number, height as Lang.Number,
                            radarInfo as Radar.MyRadarTarget) {
@@ -175,13 +160,8 @@ module Radar {
         var yValue = height - radarInfo.range.toNumber() * MAX_RANGE_DETECTION /
                                   (height - self.borderOffset * 2);
         if (yValue > 0) {
-          if (radarInfo.threat ==
-              AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING) {
-            $.sdk.changeColor(0);
-            $.sdk.fullCircle(x, yValue.toNumber(), 10);
-          } else {
-            self._showSlowVehicule(x, yValue.toNumber(), 10);
-          }
+            $.sdk.changeColor(self.atLeastOneFastVehicule ? 0 : 8);
+            $.sdk.fullCircle(x, yValue.toNumber(),self.atLeastOneFastVehicule ?8 :6);
         }
       }
     }
@@ -209,7 +189,8 @@ module Radar {
       return false;
     }
 
-    function updateRadarInfos() {
+    function updateRadarInfos(xScreenProtectionArea as Lang.Number) {
+      self.xScreenProtectionArea = xScreenProtectionArea;
       if (self.mockRadar) {
         self.bikeRadar.listener.onBikeRadarUpdate([new AntPlus.RadarTarget()]);
       }
@@ -222,7 +203,9 @@ module Radar {
           $.sdk.changeColor(0);
           toggleCircleIndicator = true;
         }
-        $.sdk.fullCircle(110, 212, 6);
+        $.sdk.fullCircle(
+            self.xScreenProtectionArea > 110 ? self.xScreenProtectionArea + self.radarAreaWidth*3/4 : 110,
+            212, 6);
         if (self.bikeRadar.getMaxRange() > 0) {
           $.sdk.changeColor(8);
           $.sdk.fullRectangle(self.xScreenProtectionArea,
