@@ -65,10 +65,30 @@ var radarView as Radar.RadarView = new Radar.RadarView(bikeRadar, 30, 25, 45,175
 
 (:typecheck(false))
 function resetGlobals() as Void {
+    
+    // $.pagesSpec = PageSettings.strToPages(
+    //     "0, 1,2,3,4,5,6,7,8,9,10,11,(1),(2,3),(4,5,6),(7,8,9,10),(11,12,13,14,15,16),(17,18,19,20,21,22),(23,24,25,27,28,29)",
+    // "1,2,3,0");
+    // $.pagesSpec = PageSettings.strToPages("1,2,3,0", "1,2,3,0");
+    $.pagesSpec = defineScreens();
+    $.pageIdx = 0;
+    $.swipe = false;
+    $.tempo_off = -1;
+    $.tempo_pause = -1;
+    $.tempo_lap_freeze = -1;
+    $.tempo_congrats = 0;
+    $.updateCurrentLayouts(0);
+}
+
+function defineScreens(){
     try {
         var _ai = "screens";
         if (Toybox.Activity has :getProfileInfo) {
             var profileInfo = Toybox.Activity.getProfileInfo();
+            if(profileInfo has :name){
+                var result =  getPageSpecFromCustomSetting(profileInfo.name);
+                if(result !=null) {return PageSettings.strToPages(result,"(1,12,2)(15,4,2)(10,18,22)(0)");}
+            }
             if (profileInfo has :sport) {
                 switch (profileInfo.sport) {
                     case Toybox.Activity.SPORT_RUNNING: { _ai = "run";     break; }
@@ -77,21 +97,23 @@ function resetGlobals() as Void {
                 }
             }
         }
-        $.pagesSpec = PageSettings.strToPages(Application.Properties.getValue(_ai), "(1,12,2)(15,4,2)(10,18,22)(0)");
+       return PageSettings.strToPages(Application.Properties.getValue(_ai), "(1,12,2)(15,4,2)(10,18,22)(0)");
     } catch (e) {
-        $.pagesSpec = PageSettings.strToPages("(1,12,2)(15,4,2)(10,18,22)(0)", null);
+        return PageSettings.strToPages("(1,12,2)(15,4,2)(10,18,22)(0)", null);
     }
-    // $.pagesSpec = PageSettings.strToPages(
-    //     "0, 1,2,3,4,5,6,7,8,9,10,11,(1),(2,3),(4,5,6),(7,8,9,10),(11,12,13,14,15,16),(17,18,19,20,21,22),(23,24,25,27,28,29)",
-    // "1,2,3,0");
-    // $.pagesSpec = PageSettings.strToPages("1,2,3,0", "1,2,3,0");
-    $.pageIdx = 0;
-    $.swipe = false;
-    $.tempo_off = -1;
-    $.tempo_pause = -1;
-    $.tempo_lap_freeze = -1;
-    $.tempo_congrats = 0;
-    $.updateCurrentLayouts(0);
+}
+
+function getPageSpecFromCustomSetting(name as Lang.String){
+    for(var i=1; i<=5; i++){
+        var customProperty = Application.Properties.getValue("custom_" + i.toString()).toString();
+        var endIndex = customProperty.find(")");
+        var currentCustomSport = customProperty.substring(1, endIndex) ;
+        var bool=name.equals(currentCustomSport);
+        if (bool){
+            return customProperty.substring(endIndex + 1, customProperty.length());
+        }
+    }
+    return null;
 }
 
 function updateCurrentLayouts(incr as Lang.Number) as Void {

@@ -8,6 +8,11 @@
     <string id="settings_screens">Default</string>
     <string id="settings_run">Running</string>
     <string id="settings_bike">Cycling</string>
+    <string id="settings_custom_1">Custom 1</string>
+    <string id="settings_custom_2">Custom 2</string>
+    <string id="settings_custom_3">Custom 3</string>
+    <string id="settings_custom_4">Custom 4</string>
+    <string id="settings_custom_5">Custom 5</string>
     
     <string id="settings_is_gesture_enable">Enable the gesture sensor</string>
     

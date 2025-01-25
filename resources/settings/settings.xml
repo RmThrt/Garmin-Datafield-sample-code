@@ -14,6 +14,21 @@
     <setting propertyKey="@Properties.screens" title="@Strings.settings_screens">
         <settingConfig type="alphaNumeric" />
     </setting>
+    <setting propertyKey="@Properties.custom_1" title="@Strings.settings_custom_1">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.custom_2" title="@Strings.settings_custom_2">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.custom_3" title="@Strings.settings_custom_3">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.custom_4" title="@Strings.settings_custom_4">
+        <settingConfig type="alphaNumeric" />
+    </setting>
+    <setting propertyKey="@Properties.custom_5" title="@Strings.settings_custom_5">
+        <settingConfig type="alphaNumeric" />
+    </setting>
     <setting propertyKey="@Properties.is_gesture_enable" title="@Strings.settings_is_gesture_enable">
         <settingConfig type="boolean" />
     </setting>
