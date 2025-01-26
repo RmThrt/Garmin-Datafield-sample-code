@@ -174,6 +174,11 @@ module ActiveLook {
                 chrono = null;
             }
 
+            var nameOfNextPoint = get(:nameOfNextPoint);
+            var distanceToNextPoint = get(:distanceToNextPoint);
+            $.log("nextN, distanceToNextPoint" ,[ nameOfNextPoint, distanceToNextPoint] );
+
+
             // Current pace
             tmp = get(:currentSpeed);
             tmpValid = tmp != null && tmp != false && tmp > 0.0;
@@ -281,6 +286,7 @@ module ActiveLook {
             :lapTotalAscent, :lapTotalDescent, :lapAverageAscentSpeed,
             :lapCalories,
             :lapAverageGroundContactTime, :lapAverageVerticalOscillation, :lapAverageStepLength,
+            :nameOfNextPoint, :distanceToNextPoint
         ];
 
         const POSITIONS as Lang.Array<PagePositions> = [
@@ -396,7 +402,7 @@ module ActiveLook {
          * ---------------------------------|------------------------|-----------|--------|---------|------------------------------------------
          */
         const IDS_NO_CONVERT as Lang.Dictionary<Lang.Symbol, Lang.Number> = {
-            :chrono                => 0x0B0B2B2B,
+            :chrono                =>  0x0B0B2B2B,
             :currentHeartRate      => 0x15153131,
             :maxHeartRate          => 0x1D1D3D3D,
             :averageHeartRate      => 0x18183434,
@@ -419,6 +425,7 @@ module ActiveLook {
             :lapCalories                 => 0x11113636,
             :lapAverageGroundContactTime => 0xBDBDBEBE,
             :radar => 0x0B0B2B2B,
+            :nameOfNextPoint => 0x0B0B2B2B
         };
 
         /*
@@ -508,6 +515,7 @@ module ActiveLook {
             :lapAverageAscentSpeed => { :id => 0x14283B3B, :statuteSwitch => :paceUnits,      :toMetric => 3600.0, :toStatute => 11811.024   },
             :lapAverageVerticalOscillation => { :id => 0xC8C9CACA, :statuteSwitch => :heightUnits, :toMetric => 0.1,   :toStatute => 0.0393701  },
             :lapAverageStepLength          => { :id => 0xC2C3C4C4, :statuteSwitch => :heightUnits, :toMetric => 0.001, :toStatute => 0.00328084 },
+            :distanceToNextPoint          => { :id => 0x0C232E2E, :statuteSwitch => :distanceUnits, :toMetric => 0.001, :toStatute =>  0.000621371 },
         };
 
         const CUSTOM_TO_STR as Lang.Dictionary<Lang.Symbol, {
@@ -525,6 +533,7 @@ module ActiveLook {
             :normalizedPower 		=> { :full => :averagePowerFullFormat,  :half => :averagePowerHalfFormat  },
             :threeSecPower 		    => { :full => :averagePowerFullFormat,  :half => :averagePowerHalfFormat  },
             :radar 		    => { :full => :radarFullFormat,  :half => :radarHalfFormat },
+            :nameOfNextPoint 		    => { :full => :nameOfNextPointFullFormat,  :half => :nameOfNextPointHalfFormat },
         };
 
         function toFullChronoStr(value as Lang.Array<Lang.Number> or Null) as Lang.String {
@@ -602,6 +611,20 @@ module ActiveLook {
         
         function radarHalfFormat(value as Lang.Number or Lang.Float or Null) as Lang.String {
             return "";
+        }
+        
+        function nameOfNextPointFullFormat(value as Lang.Number or Lang.Float or Null) as Lang.String {
+            if (value == null) {
+                return toFullStr("-");
+            }
+            return toFullStr(value);
+        }
+        
+        function nameOfNextPointHalfFormat(value as Lang.Number or Lang.Float or Null) as Lang.String {
+            if (value == null) {
+                return toHalfStr("-");
+            }
+            return toHalfStr(value);
         }
 
         function toSizedStringDeprecated(value as Lang.Number or Lang.Float or Null, size as Lang.Number) as Lang.String {
