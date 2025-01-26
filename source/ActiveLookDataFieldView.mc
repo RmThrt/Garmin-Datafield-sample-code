@@ -8,13 +8,23 @@ using Toybox.AntPlus;
 
 using ActiveLookSDK;
 using Radar;
+using Navigation;
 using ActiveLook.AugmentedActivityInfo;
 using ActiveLook.PageSettings;
 using ActiveLook.Layouts;
 using ActiveLook.Laps;
 
+
+var updateMsgSecondRowGlobal = "";
+
+var ACTIVELOOK_WIDTH_SCREEN = 274;
+var ACTIVELOOK_HEIGHT_SCREEN = 240;
+
+
 //! Private logger enabled in debug and disabled in release mode
-(:release) function log(msg as Toybox.Lang.String, data as Toybox.Lang.Object or Null) as Void {}
+(:release) function log(msg as Toybox.Lang.String, data as Toybox.Lang.Object or Null) as Void {
+        updateMsgSecondRowGlobal = Toybox.Lang.format("$1$ $2$", [msg, data]);
+}
 (:release) function arrayToHex(array as Toybox.Lang.ByteArray or Toybox.Lang.Array<Toybox.Lang.Integer>) as Toybox.Lang.String { return ""; }
 (:debug)   function arrayToHex(array as Toybox.Lang.ByteArray or Toybox.Lang.Array<Toybox.Lang.Integer>) as Toybox.Lang.String {
     var msg = "[";
@@ -25,10 +35,12 @@ using ActiveLook.Laps;
     }
     return Toybox.Lang.format("$1$]", [msg]);
 }
+
 (:debug)   function log(msg as Toybox.Lang.String, data as Toybox.Lang.Object or Null) as Void {
     if (data instanceof Toybox.Lang.ByteArray) { data = arrayToHex(data); }
     if (data instanceof Toybox.Lang.Exception) { data.printStackTrace() ; data = data.getErrorMessage(); }
     Toybox.System.println(Toybox.Lang.format("[D]$1$ $2$", [msg, data]));
+    updateMsgSecondRowGlobal = Toybox.Lang.format("[D]$1$ $2$", [msg, data]);
 }
 
 var radarOnly as Lang.Boolean = false;
@@ -49,6 +61,7 @@ var runningDynamics as Toybox.AntPlus.RunningDynamics or Null = null;
 var bikeRadarListener as Radar._MyRadarListenerCommon = mockRadar? new Radar.MockRadarListener() : new Radar.RadarListener();
 var bikeRadar = new Radar.MyBikeRadar(bikeRadarListener);
 var radarView as Radar.RadarView = new Radar.RadarView(bikeRadar, 30, 25, 45,175,false, mockRadar);
+var navigation as Navigation.Navigation = new Navigation.Navigation(ACTIVELOOK_WIDTH_SCREEN, ACTIVELOOK_HEIGHT_SCREEN/2, 0x02);
 
 // ToDo : différence pause stop
 // 1) Event onTimerStop  devrait être considéré comme un onTimerPause
@@ -65,6 +78,7 @@ var radarView as Radar.RadarView = new Radar.RadarView(bikeRadar, 30, 25, 45,175
 
 (:typecheck(false))
 function resetGlobals() as Void {
+
     
     // $.pagesSpec = PageSettings.strToPages(
     //     "0, 1,2,3,4,5,6,7,8,9,10,11,(1),(2,3),(4,5,6),(7,8,9,10),(11,12,13,14,15,16),(17,18,19,20,21,22),(23,24,25,27,28,29)",
@@ -128,6 +142,7 @@ function updateCurrentLayouts(incr as Lang.Number) as Void {
         $.currentLayouts = Layouts.pageToGenerator($.pagesSpec[$.pageIdx]);
     }
 }
+
 
 (:typecheck(false))
 function updateFields() as Void {
@@ -214,12 +229,16 @@ function updateFields() as Void {
     $.sdk.flushCmdStackingIfSup(200);
     $.sdk.holdGraphicEngine();
     radarView.clearRadarArea();
+    navigation.clearArea();
     for (var i = 0; i < after; i++) {
         var asStr = Layouts.get($.currentLayouts[i]);
         log("updateFields", [i, asStr, $.currentLayouts]);
         $.sdk.updateLayoutValue($.currentLayouts[i][:id], asStr);
     }
 
+    if(AugmentedActivityInfo.get(:nameOfNextPoint)){
+        navigation.updateNavInfos(AugmentedActivityInfo.get(:nameOfNextPoint),AugmentedActivityInfo.get(:distanceToNextPoint));
+    }
     radarView.updateRadarInfos((after==1 && $.currentLayouts[0][:sym] == :radar) ? 250:30);
     $.sdk.flushGraphicEngine();
 }
@@ -311,6 +330,7 @@ class ActiveLookDataFieldView extends WatchUi.DataField {
         _nextAlsStatus = Toybox.Application.Properties.getValue("is_als_enable");
         AugmentedActivityInfo.accumulate(info);
         AugmentedActivityInfo.compute(info);
+        self.canvas.updateMsg = updateMsgSecondRowGlobal;
         var rdd = null;
         if (runningDynamics != null) {
             rdd = runningDynamics.getRunningDynamics();
@@ -346,7 +366,8 @@ class ActiveLookDataFieldView extends WatchUi.DataField {
         if (System.getDeviceSettings().is24Hour == false && hour > 12) {
             hour = hour - 12;
         }
-        if (ActiveLookSDK.isReady()) {
+        if (ActiveLookSDK.isReady()) 
+        {
             log("compute::updateFields  ", [self.__heart_count]);
             if(self.__is_auto_loop){
                 if(self.__loop_timer.equals(0)){
@@ -393,6 +414,8 @@ class ActiveLookDataFieldView extends WatchUi.DataField {
         //         $.sdk.sendRawCmd(fullBuffer);
 		//     }
 		// }
+
+        
         return null;
     }
 

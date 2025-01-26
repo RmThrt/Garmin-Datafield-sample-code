@@ -319,7 +319,7 @@ module ActiveLookSDK {
             } catch (e) {
                 clearError = true;
                 onBleError(e);
-            }
+            }   
         }
 
         function Text(text, x, y, rotation, size, color) {

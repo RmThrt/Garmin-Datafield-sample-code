@@ -201,7 +201,7 @@ module Radar {
           toggleCircleIndicator = false;
         } else {
           $.sdk.changeColor(0);
-          toggleCircleIndicator = true;
+          toggleCircleIndicator = true; 
         }
         $.sdk.fullCircle(
             self.xScreenProtectionArea > 110 ? self.xScreenProtectionArea + self.radarAreaWidth*3/4 : 110,
