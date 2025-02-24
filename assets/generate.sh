@@ -30,8 +30,8 @@ _generate_assets() {
 
     echo " Generating launcher icon"
     for INPUT in $(grep -oE 'filename="[^"]*"' "drawables/"launcher_icon.xml | sed -e 's/filename="\([^"]*\)"/\1/') ; do
-        echo "  Generating ${INPUT} > " convert "drawables/${INPUT}" -resize ${2}x${3} "${1}/drawables/${INPUT}"
-        convert "drawables/${INPUT}" -resize ${2}x${3} "${1}/drawables/${INPUT}"
+        echo "  Generating ${INPUT} > " magick "drawables/${INPUT}" -resize ${2}x${3} "${1}/drawables/${INPUT}"
+        magick "drawables/${INPUT}" -resize ${2}x${3} "${1}/drawables/${INPUT}"
     done
 
     mkdir -p "${1}/fonts"
@@ -47,14 +47,14 @@ _generate_assets() {
         echo "  Generating font ${FONT_ID} from ${FONT_FILENAME} with filter ${FONT_FILTER}"
         mkdir -p "${1}/fonts/${FONT_ID}"
         cp -v "fonts/${FONT_FILENAME}" "${1}/fonts/"
-        sed -i '' 's/{FONT_ID}/'${FONT_ID}'/g' "${1}/fonts/${FONT_FILENAME}"
-        sed -i '' 's/{FONT_WIDTH}/'${FONT_WIDTH}'/g' "${1}/fonts/${FONT_FILENAME}"
-        sed -i '' 's/{FONT_HEIGHT}/'${FONT_HEIGHT}'/g' "${1}/fonts/${FONT_FILENAME}"
-        sed -i '' 's/{FONT_LINEHEIGHT}/'${FONT_LINEHEIGHT}'/g' "${1}/fonts/${FONT_FILENAME}"
+        sed -i "s/{FONT_ID}/${FONT_ID}/g" "${1}/fonts/${FONT_FILENAME}"
+        sed -i "s/{FONT_WIDTH}/${FONT_WIDTH}/g" "${1}/fonts/${FONT_FILENAME}"
+        sed -i "s/{FONT_HEIGHT}/${FONT_HEIGHT}/g" "${1}/fonts/${FONT_FILENAME}"
+        sed -i "s/{FONT_LINEHEIGHT}/${FONT_LINEHEIGHT}/g" "${1}/fonts/${FONT_FILENAME}"
         for FILTER in $(echo ${FONT_FILTER} | grep -Eo '.') ; do
             echo "   Generating ${FILTER} for font ${FONT_ID} from ${FONT_FILENAME} with filter ${FONT_FILTER}"
-            sed -i '' 's/{FONT_X'${FILTER}'}/'$(( (${FONT_WIDTH} + 1) * ${FILTER} ))'/g' "${1}/fonts/${FONT_FILENAME}"
-            convert "fonts/${FONT_ID}/${FILTER}.png" \
+            sed -i  "s/{FONT_X${FILTER}}/$(( (${FONT_WIDTH} + 1) * ${FILTER} ))/g" "${1}/fonts/${FONT_FILENAME}"
+            magick "fonts/${FONT_ID}/${FILTER}.png" \
                 -colorspace Gray -ordered-dither h4x4a \
                 -resize ${FONT_WIDTH}x${FONT_HEIGHT} \
                 -gravity center -extent ${FONT_WIDTH}x${FONT_HEIGHT} \
@@ -62,7 +62,7 @@ _generate_assets() {
                 "${1}/fonts/${FONT_ID}/${FILTER}.png"
         done
         rm -f "${1}/fonts/${FONT_ID}/sprites.png"
-        convert "${1}/fonts/${FONT_ID}/*.png" \
+        magick "${1}/fonts/${FONT_ID}/*.png" \
             -background red -splice 1x0+0+0 \
             +append -chop 1x0+0+0 "${1}/fonts/${FONT_ID}/sprites.png"
     done

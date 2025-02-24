@@ -11,8 +11,8 @@ lh;lw;www;hhh;qualifier
 35;35;230;303;rectangle-230x303
 35;35;246;322;rectangle-246x322
 36;36;282;470;rectangle-282x470
-70;70;390;390;approachs7042mm
-80;80;454;454;approachs7047mm
+60;60;390;390;approachs7042mm
+70;70;454;454;approachs7047mm
 70;70;416;416;d2airx10
 60;60;416;416;d2mach1
 40;40;280;280;descentmk2
@@ -36,6 +36,7 @@ lh;lw;www;hhh;qualifier
 40;40;240;240;fenix5plus
 40;40;240;240;fenix5splus
 40;40;240;240;fenix5xplus
+40;40;260;260;fenix6
 40;40;260;260;fenix6pro
 40;40;240;240;fenix6spro
 40;40;280;280;fenix6xpro

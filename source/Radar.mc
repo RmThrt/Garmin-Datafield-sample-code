@@ -2,6 +2,7 @@ using Toybox.AntPlus;
 using Toybox.Lang;
 
 module Radar {
+  var MAX_RANGE_DETECTION as Lang.Float = 170.0;
   class MyRadarTarget extends AntPlus.RadarTarget {
     function initialize(rangeI as Lang.Float, speedI as Lang.Float,
                         threatI as AntPlus.ThreatLevel,
@@ -35,10 +36,7 @@ module Radar {
     const emulatorIterationBeforeSetBackvalue as Lang.Number = 5;
     var emulatorIterationCount as Lang.Number = 0;
 
-    function initialize() {
-      _MyRadarListenerCommon.initialize();
-
-    }
+    function initialize() { _MyRadarListenerCommon.initialize(); }
 
     function onBikeRadarUpdate(data) {
       self.radarConnected = true;
@@ -48,6 +46,13 @@ module Radar {
         self.radarInfos[i].range = self.radarInfos[i].range - 15;
         if (self.radarInfos[i].range < 0) {
           self.radarInfos[i].range = self.radarInfos[i].range;
+          if (self.radarInfos[i].range > 150) {
+            self.radarInfos[i].threat =
+                AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING;
+          } else {
+            self.radarInfos[i].threat =
+                AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING;
+          }
           self.radarInfos.remove(radarInfos[i]);
           i--;
           continue;
@@ -61,18 +66,27 @@ module Radar {
         if (emulatorIterationCount < emulatorIterationBeforeSetBackvalue) {
           emulatorIterationCount++;
         } else {
-          emulatorIterationCount= 0;
+          emulatorIterationCount = 0;
           self.radarInfos = [
             new MyRadarTarget(30.0, 90.0,
-                              AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
+                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
                               AntPlus.THREAT_SIDE_LEFT),
             new MyRadarTarget(58.0, 30.0,
-                              AntPlus.THREAT_LEVEL_VEHICLE_FAST_APPROACHING,
+                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
                               AntPlus.THREAT_SIDE_RIGHT),
             new MyRadarTarget(90.0, 50.0,
                               AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
                               AntPlus.THREAT_SIDE_NO_SIDE),
             new MyRadarTarget(139.0, 120.0,
+                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
+                              AntPlus.THREAT_SIDE_NO_SIDE),
+            new MyRadarTarget(170.0, 120.0,
+                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
+                              AntPlus.THREAT_SIDE_NO_SIDE),
+            new MyRadarTarget(175.0, 120.0,
+                              AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
+                              AntPlus.THREAT_SIDE_NO_SIDE),
+            new MyRadarTarget(215.0, 120.0,
                               AntPlus.THREAT_LEVEL_VEHICLE_APPROACHING,
                               AntPlus.THREAT_SIDE_NO_SIDE)
           ];
@@ -126,7 +140,7 @@ module Radar {
     var bikeRadar as MyBikeRadar;
     var xScreenProtectionArea as Lang.Number;
     var yScreenProtectionArea as Lang.Number;
-    var MAX_RANGE_DETECTION as Lang.Number = 170;
+
     var radarAreaWidth as Lang.Number;
     var radarAreaHeight as Lang.Number;
     var radarAreaIsClean as Lang.Boolean;
@@ -151,22 +165,31 @@ module Radar {
       self.mockRadar = mockRadar;
     }
 
-
+    function scaleConvert(maxOutput as Lang.Float, minOutput as Lang.Float,
+                 maxInput as Lang.Float, minInput as Lang.Float , nbInput as Lang.Float) {
+      return (maxOutput - minOutput) / (maxInput - minInput) * (nbInput - minInput) +
+             minOutput;
+    }
 
     function _showVehicule(x as Lang.Number, height as Lang.Number,
                            radarInfo as Radar.MyRadarTarget) {
       $.sdk.changeColor(self.atLeastOneFastVehicule ? 0 : 8);
+      var maxCircleRadius = 8;
       if (radarInfo.range < MAX_RANGE_DETECTION && radarInfo.range > 0) {
-        var yValue = height - radarInfo.range.toNumber() * MAX_RANGE_DETECTION /
-                                  (height - self.borderOffset * 2);
+        var yValue = yScreenProtectionArea + height - scaleConvert(height.toFloat(), 0.0, MAX_RANGE_DETECTION, 0.0, radarInfo.range);
+        if (yValue > 200) {
+          Toybox.System.println("yValue: " + yValue);
+        }
         if (yValue > 0) {
-            $.sdk.changeColor(self.atLeastOneFastVehicule ? 0 : 8);
-            $.sdk.fullCircle(x, yValue.toNumber(),self.atLeastOneFastVehicule ?8 :6);
+          $.sdk.changeColor(self.atLeastOneFastVehicule ? 0 : 8);
+          $.sdk.fullCircle(x, yValue.toNumber(),
+                           self.atLeastOneFastVehicule ? maxCircleRadius : 6);
         }
       }
     }
 
     function clearRadarArea() {
+      var a = self.bikeRadar.getMaxRange();
       if (self.bikeRadar.isConnected() && self.bikeRadar.getMaxRange() == 0 &&
           self.radarAreaIsClean == false) {
         $.sdk.changeColor(0);
@@ -204,7 +227,9 @@ module Radar {
           toggleCircleIndicator = true;
         }
         $.sdk.fullCircle(
-            self.xScreenProtectionArea > 110 ? self.xScreenProtectionArea + self.radarAreaWidth*3/4 : 110,
+            self.xScreenProtectionArea > 110
+                ? self.xScreenProtectionArea + self.radarAreaWidth * 3 / 4
+                : 110,
             212, 6);
         if (self.bikeRadar.getMaxRange() > 0) {
           $.sdk.changeColor(8);
