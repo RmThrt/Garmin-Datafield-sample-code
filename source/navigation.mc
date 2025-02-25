@@ -19,31 +19,37 @@ module Navigation {
       "" => ""
   };
 
-  var DISTANCE_TO_DISPLAY = 400.0;
 
   class Navigation {  
     var xScreenProtectionArea as Lang.Number;
     var yScreenProtectionArea as Lang.Number;
     var simCount = -1;
     var isRunning = false;
+    var distanceToDisplay as Lang.Float = 30.0;
     const borderOffset as Lang.Number = 8;
     var fontSize as Lang.Number;
 
     function initialize(xScreenProtectionArea as Lang.Number,
                         yScreenProtectionArea as Lang.Number,
-                        fontSize as Lang.Number) {
+                        fontSize as Lang.Number,
+                        distanceToDisplay as Lang.Float) {
       self.xScreenProtectionArea = xScreenProtectionArea;
+      self.distanceToDisplay = distanceToDisplay;
       self.yScreenProtectionArea = yScreenProtectionArea;
       self.fontSize = fontSize;
     }
 
-    function sendNavInfos(routingType as Lang.String,distance as Lang.Float){
+    function sendNavInfos(routingType as Lang.String,distance as Lang.Float, offCourseDistance as Lang.Float){
       isRunning = false;
-      if (distance < DISTANCE_TO_DISPLAY && distance > 0.0 ) {
+
+      if ((distance < self.distanceToDisplay || offCourseDistance >5.0) && distance > 0.0 ) {
         isRunning = true;
         var routingTypeStr = routingType;
         var distanceStr = distance.format("%.0f") + "m";
-        
+        if (offCourseDistance > 5.0) {
+          routingTypeStr = "OffCourse, distance:";
+          distanceStr = offCourseDistance.format("%.0f") + "m";
+        }
         var routingTypeLen = routingTypeStr.length();
         var distanceStrLen = distanceStr.length();
 
@@ -71,11 +77,11 @@ module Navigation {
       }
     }
 
-    (:release) function updateNavInfos(routingType as Lang.String,distance as Lang.Float) {
-      self.sendNavInfos(routingType, distance);
+    (:release) function updateNavInfos(routingType as Lang.String,distance as Lang.Float, offCourseDistance as Lang.Float) {
+      self.sendNavInfos(routingType, distance, offCourseDistance);
     }
 
-     (:debug) function updateNavInfos(routingType as Lang.String,distance as Lang.Float){
+     (:debug) function updateNavInfos(routingType as Lang.String,distance as Lang.Float, offCourseDistance as Lang.Float){
       // if( simCount>RoutingType.size()){
       //   simCount = -1;
       // }
@@ -84,7 +90,7 @@ module Navigation {
       // routingType = RoutingType.keys()[simCount];
       // distance = DISTANCE_TO_DISPLAY/RoutingType.size() * simCount;
       
-      self.sendNavInfos(routingType, distance);
+      self.sendNavInfos(routingType, distance, offCourseDistance);
 
     }
   }

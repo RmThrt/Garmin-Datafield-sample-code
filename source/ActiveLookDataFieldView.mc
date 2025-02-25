@@ -61,7 +61,9 @@ var runningDynamics as Toybox.AntPlus.RunningDynamics or Null = null;
 var bikeRadarListener as Radar._MyRadarListenerCommon = mockRadar? new Radar.MockRadarListener() : new Radar.RadarListener();
 var bikeRadar = new Radar.MyBikeRadar(bikeRadarListener);
 var radarView as Radar.RadarView = new Radar.RadarView(bikeRadar, 30, 25, 45,175,false, mockRadar);
-var navigation as Navigation.Navigation = new Navigation.Navigation(ACTIVELOOK_WIDTH_SCREEN, ACTIVELOOK_HEIGHT_SCREEN/2, 0x02);
+
+
+var navigation as Navigation.Navigation or Null = null;
 
 // ToDo : différence pause stop
 // 1) Event onTimerStop  devrait être considéré comme un onTimerPause
@@ -103,18 +105,36 @@ function defineScreens(){
                 var result =  getPageSpecFromCustomSetting(profileInfo.name);
                 if(result !=null) {return PageSettings.strToPages(result,"(1,12,2)(15,4,2)(10,18,22)(0)");}
             }
+            var distanceToDisplay = 30.0;
             if (profileInfo has :sport) {
                 switch (profileInfo.sport) {
                     case Toybox.Activity.SPORT_RUNNING: { _ai = "run";     break; }
                     case Toybox.Activity.SPORT_CYCLING: { _ai = "bike";    break; }
                     default:                            { _ai = "screens"; break; }
                 }
+                switch (profileInfo.sport) {
+                    case Toybox.Activity.SPORT_RUNNING: { distanceToDisplay = 30.0; break; }
+                    case Toybox.Activity.SPORT_CYCLING: { distanceToDisplay = 100.0; break; }
+                    case Toybox.Activity.SPORT_SWIMMING: { distanceToDisplay = 30.0; break; }
+                    case Toybox.Activity.SPORT_WALKING: { distanceToDisplay = 30.0; break; }
+                    case Toybox.Activity.SPORT_HIKING: { distanceToDisplay = 30.0; break; }
+                    case Toybox.Activity.SPORT_ROWING: { distanceToDisplay = 30.0; break; }
+                    default: { distanceToDisplay = 30.0; break; }
+                }
             }
+            navigation = new Navigation.Navigation(ACTIVELOOK_WIDTH_SCREEN, ACTIVELOOK_HEIGHT_SCREEN/2, 0x02,distanceToDisplay);
+            
         }
+        
+    
+
+    
        return PageSettings.strToPages(Application.Properties.getValue(_ai), "(1,12,2)(15,4,2)(10,18,22)(0)");
     } catch (e) {
         return PageSettings.strToPages("(1,12,2)(15,4,2)(10,18,22)(0)", null);
     }
+
+
 }
 
 function getPageSpecFromCustomSetting(name as Lang.String){
@@ -237,7 +257,7 @@ function updateFields() as Void {
     }
 
     if(AugmentedActivityInfo.get(:nameOfNextPoint)){
-        navigation.updateNavInfos(AugmentedActivityInfo.get(:nameOfNextPoint),AugmentedActivityInfo.get(:distanceToNextPoint));
+        navigation.updateNavInfos(AugmentedActivityInfo.get(:nameOfNextPoint),AugmentedActivityInfo.get(:distanceToNextPoint), AugmentedActivityInfo.get(:offCourseDistance ));
     }
     radarView.updateRadarInfos((after==1 && $.currentLayouts[0][:sym] == :radar) ? 250:30);
     $.sdk.flushGraphicEngine();
