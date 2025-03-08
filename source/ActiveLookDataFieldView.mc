@@ -13,6 +13,7 @@ using ActiveLook.PageSettings;
 using ActiveLook.Layouts;
 using ActiveLook.Laps;
 
+var msgSecondRow = "";
 //! Private logger enabled in debug and disabled in release mode
 (:release) function log(msg as Toybox.Lang.String, data as Toybox.Lang.Object or Null) as Void {}
 (:release) function arrayToHex(array as Toybox.Lang.ByteArray or Toybox.Lang.Array<Toybox.Lang.Integer>) as Toybox.Lang.String { return ""; }
@@ -43,6 +44,8 @@ var tempo_lap_freeze as Lang.Number = -1;
 var tempo_congrats as Lang.Number = 1;
 var currentLayouts as Lang.Array<Layouts.GeneratorArguments> = [] as Lang.Array<Layouts.GeneratorArguments>;
 var runningDynamics as Toybox.AntPlus.RunningDynamics or Null = null;
+var countOfSecondWithRadarDisconnected as Lang.Number = 20;
+var countOfSecondWithRadarConnected as Lang.Number = 0;
 
 (:debug)var mockRadar = true;
 (:release)var mockRadar = false;
@@ -189,17 +192,51 @@ function updateFields() as Void {
     if ($.tempo_off == 0) {
         return;
     }
+    if (radarView.getRadarInfo() == null) {
+        countOfSecondWithRadarDisconnected++;
+        countOfSecondWithRadarConnected=0;
+        radarView.bikeRadar.setConnection(false);
+    } else {
+        countOfSecondWithRadarDisconnected = 0;
+        countOfSecondWithRadarConnected++;
+        radarView.bikeRadar.setConnection(true);
+    }
     $.sdk.flushCmdStackingIfSup(200);
     $.sdk.holdGraphicEngine();
     radarView.clearRadarArea();
+    if (countOfSecondWithRadarConnected == 4 ||
+    countOfSecondWithRadarDisconnected == 5) {
+      $.sdk.changeColor(0);
+      $.sdk.fullRectangle(0, 0, 400, 400);
+      $.sdk.resetLayouts([]);
+    }
     for (var i = 0; i < after; i++) {
         var asStr = Layouts.get($.currentLayouts[i]);
         log("updateFields", [i, asStr, $.currentLayouts]);
         $.sdk.updateLayoutValue($.currentLayouts[i][:id], asStr);
+    }  
+   
+    if (countOfSecondWithRadarDisconnected > 0 &&
+        countOfSecondWithRadarDisconnected < 5) {
+        $.sdk.changeColor(0);
+        $.sdk.fullRectangle(0, 0, 400, 200);
+        radarView.displayRadarDisconnectedPopup();
+    }
+
+
+    if (countOfSecondWithRadarConnected > 0 &&
+        countOfSecondWithRadarConnected < 3) {
+        $.sdk.changeColor(0);
+        $.sdk.fullRectangle(0, 0, 400, 200);
+        radarView.displayRadarConnectedPopup();
     }
 
     radarView.updateRadarInfos((after==1 && $.currentLayouts[0][:sym] == :radar) ? 250:30);
+
     $.sdk.flushGraphicEngine();
+
+    if (countOfSecondWithRadarConnected > 100) {countOfSecondWithRadarConnected = 10;}
+    if (countOfSecondWithRadarDisconnected > 100) {countOfSecondWithRadarDisconnected = 20;}
 }
 
 (:typecheck(false))
@@ -221,6 +258,7 @@ class DataFieldDrawable extends WatchUi.Drawable {
         dc.clear();
         var midX = dc.getWidth() / 2d;                // x 50%
         var midY = dc.getHeight() * 3d / 5d;          // y 60%
+        dc.drawText(midX, midY - 20d, Graphics.FONT_XTINY, msgSecondRow, justify); // (50%, 40%)
         if(self.updateMsg != null && self.updateMsgSecondRow != null && self.updateMsgThirdRow != null){
             dc.drawText(midX, midY - 40d, Graphics.FONT_XTINY, self.updateMsg, justify); // (50%, 20%)
             dc.drawText(midX, midY - 20d, Graphics.FONT_XTINY, self.updateMsgSecondRow, justify); // (50%, 40%)

@@ -104,7 +104,6 @@ module Radar {
       self.maxRadarRange = 0.0;
 
       if (data != null) {
-        self.radarConnected = true;
         for (var i = 0; i < NUMBER_OF_THREAT; i++) {
           if (data[i].range.toNumber() > self.maxRadarRange) {
             self.maxRadarRange = data[i].range;
@@ -133,6 +132,10 @@ module Radar {
 
     function getMaxRange() as Lang.Float { return self.listener.getMaxRange(); }
 
+    function setConnection(isConnected as Lang.Boolean) {
+      self.listener.radarConnected = isConnected;
+    }
+
     function isConnected() { return self.listener.getRadarConnected(); }
   }
 
@@ -146,6 +149,7 @@ module Radar {
     var radarAreaIsClean as Lang.Boolean;
     var mockRadar as Lang.Boolean = false;
     var toggleCircleIndicator as Lang.Boolean = false;
+    var toggleCircleIndicatorBackup as Lang.Boolean = false;
     const borderOffset as Lang.Number = 8;
     var atLeastOneFastVehicule as Lang.Boolean = false;
 
@@ -166,8 +170,10 @@ module Radar {
     }
 
     function scaleConvert(maxOutput as Lang.Float, minOutput as Lang.Float,
-                 maxInput as Lang.Float, minInput as Lang.Float , nbInput as Lang.Float) {
-      return (maxOutput - minOutput) / (maxInput - minInput) * (nbInput - minInput) +
+                          maxInput as Lang.Float, minInput as Lang.Float,
+                          nbInput as Lang.Float) {
+      return (maxOutput - minOutput) / (maxInput - minInput) *
+                 (nbInput - minInput) +
              minOutput;
     }
 
@@ -176,7 +182,9 @@ module Radar {
       $.sdk.changeColor(self.atLeastOneFastVehicule ? 0 : 8);
       var maxCircleRadius = 8;
       if (radarInfo.range < MAX_RANGE_DETECTION && radarInfo.range > 0) {
-        var yValue = yScreenProtectionArea + height - scaleConvert(height.toFloat(), 0.0, MAX_RANGE_DETECTION, 0.0, radarInfo.range);
+        var yValue = yScreenProtectionArea + height -
+                     scaleConvert(height.toFloat(), 0.0, MAX_RANGE_DETECTION,
+                                  0.0, radarInfo.range);
         if (yValue > 200) {
           Toybox.System.println("yValue: " + yValue);
         }
@@ -189,7 +197,6 @@ module Radar {
     }
 
     function clearRadarArea() {
-      var a = self.bikeRadar.getMaxRange();
       if (self.bikeRadar.isConnected() && self.bikeRadar.getMaxRange() == 0 &&
           self.radarAreaIsClean == false) {
         $.sdk.changeColor(0);
@@ -199,6 +206,25 @@ module Radar {
         $.sdk.resetLayouts([]);
         radarAreaIsClean = true;
       }
+    }
+
+    function clearConnectionPopupArea(){
+      $.sdk.changeColor(0);
+      $.sdk.fullRectangle(0, 80, 400, 75);
+    }
+
+    function displayRadarConnectedPopup() {
+      clearConnectionPopupArea();
+      $.sdk.changeColor(8);
+      $.sdk.Text("Radar", 200, 170, 4, 2, 15);
+      $.sdk.Text("Connected", 250, 130, 4, 2, 15);
+    
+    }
+    function displayRadarDisconnectedPopup() {
+      clearConnectionPopupArea();
+      $.sdk.changeColor(8);
+      $.sdk.Text("Radar", 200, 170, 4, 2, 15);
+      $.sdk.Text("Disconnected", 270, 130, 4, 2, 15);
     }
 
     function _isThereAtLeastOneFastVehicule(
@@ -212,25 +238,41 @@ module Radar {
       return false;
     }
 
-    function updateRadarInfos(xScreenProtectionArea as Lang.Number) {
-      self.xScreenProtectionArea = xScreenProtectionArea;
-      if (self.mockRadar) {
-        self.bikeRadar.listener.onBikeRadarUpdate([new AntPlus.RadarTarget()]);
-      }
-
-      if (self.bikeRadar.isConnected()) {
-        if (toggleCircleIndicator) {
+    function toggleCircleIndicatorDisplay() {
+      if (toggleCircleIndicator) {
           $.sdk.changeColor(8);
           toggleCircleIndicator = false;
         } else {
           $.sdk.changeColor(0);
           toggleCircleIndicator = true;
         }
+       displayCircleIndicator();
+    }
+
+    function displayCircleIndicator(){
         $.sdk.fullCircle(
             self.xScreenProtectionArea > 110
                 ? self.xScreenProtectionArea + self.radarAreaWidth * 3 / 4
                 : 110,
             212, 6);
+    }
+
+    function getRadarInfo() {
+      if (self.mockRadar) {
+        return [];
+      }
+      return self.bikeRadar.getRadarInfo();
+    }
+
+    function updateRadarInfos(xScreenProtectionArea as Lang.Number) {
+      self.xScreenProtectionArea = xScreenProtectionArea;
+      if (self.mockRadar) {
+        self.bikeRadar.listener.onBikeRadarUpdate([new AntPlus.RadarTarget()]);
+      }
+
+      toggleCircleIndicatorBackup = toggleCircleIndicator;
+      if (self.bikeRadar.isConnected()) {
+        toggleCircleIndicatorDisplay();
         if (self.bikeRadar.getMaxRange() > 0) {
           $.sdk.changeColor(8);
           $.sdk.fullRectangle(self.xScreenProtectionArea,
@@ -257,7 +299,15 @@ module Radar {
 
           self.radarAreaIsClean = false;
         }
+      } else {
+          toggleCircleIndicator = false;
+          if(toggleCircleIndicatorBackup != toggleCircleIndicator){
+            $.sdk.changeColor(0);
+            displayCircleIndicator();
+          }
       }
     }
+
+    
   }
 }
