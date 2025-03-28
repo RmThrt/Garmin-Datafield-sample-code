@@ -204,10 +204,9 @@ function updateFields() as Void {
     $.sdk.flushCmdStackingIfSup(200);
     $.sdk.holdGraphicEngine();
     radarView.clearRadarArea();
-    if (countOfSecondWithRadarConnected == 4 ||
-    countOfSecondWithRadarDisconnected == 5) {
-      $.sdk.changeColor(0);
-      $.sdk.fullRectangle(0, 0, 400, 400);
+    if (countOfSecondWithRadarConnected == 4  ||
+     countOfSecondWithRadarDisconnected == 6) {
+      $.sdk.clearScreen();
       $.sdk.resetLayouts([]);
     }
     for (var i = 0; i < after; i++) {
